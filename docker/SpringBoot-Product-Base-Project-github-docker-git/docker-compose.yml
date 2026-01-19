@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootroot
+      MYSQL_DATABASE: microdb
+    ports:
+      - "3303:3306"  #  Host:Container → MySQL exposed on 3303 externally
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - product-network
+
+  product-ws:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: product-ws
+    ports:
+      - "9292:9292"
+    depends_on:
+      - mysql-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/microdb  # ✅ Use 3306 (container port)
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootroot
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    networks:
+      - product-network
+
+volumes:
+  mysql-data: 
+
+networks:
+  product-network:
+    driver: bridge

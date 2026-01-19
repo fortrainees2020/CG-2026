@@ -1,0 +1,33 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto8
+      docker: 18
+  pre_build:
+    commands:
+      - echo "Pre_build"
+      - echo "Logging in to Amazon ECR"
+      - $(aws ecr get-login  --no-include-email --region us-east-1)
+  build:
+    commands:
+      - echo "Build"
+      - echo "Entered build phase"
+      - echo "Building Java"
+      - docker login --username dockerhubcts --password dockerhub@123*
+      - cd  aws-employee
+      - mvn clean package
+      - docker build -t ij036-emp-service-registry:latest .
+      - docker tag ij036-emp-service-registry:latest 421308774925.dkr.ecr.us-east-1.amazonaws.com/emp-service-registry:empapp
+
+  post_build:
+    commands:
+      - echo "Post_build"
+      - docker push 421308774925.dkr.ecr.us-east-1.amazonaws.com/emp-service-registry:empapp
+      - printf '[{"name":"empsapp-container","imageUri":"%s"}]' 421308774925.dkr.ecr.us-east-1.amazonaws.com/emp-service-registry:empapp> taskdefinition.json
+      - cat taskdefinition.json
+
+artifacts:
+  files:
+    - book-service/taskdefinition.json
